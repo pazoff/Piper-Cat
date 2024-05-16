@@ -1,0 +1,9 @@
+{
+    "name": "Piper Cat",
+    "description": "Makes possible the cat to be able to speak using offline Piper engine TTS.",
+    "author_name": "Pazoff",
+    "tags": "Piper,Speech,Voice",
+    "plugin_url": "https://github.com/pazoff/Piper-Cat",
+    "thumb": "https://raw.githubusercontent.com/pazoff/Piper-Cat/main/piper-logo.png",
+    "version": "0.0.1"
+}
