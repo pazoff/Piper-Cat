@@ -16,6 +16,7 @@ import shlex
 # Select box
 class VoiceSelect(Enum):
     Alice: str = 'Alice'
+    Eve: str = 'Eve'
     Dave: str = 'Dave'
     Ruslan: str = 'Ruslan'
 
@@ -93,7 +94,7 @@ def build_piper_command(llm_message: str, cat):
     selected_voice = settings.get("Voice")
 
     # Check if selected_voice is None or not in the specified list
-    if selected_voice not in ["Alice", "Dave", "Ruslan"]:
+    if selected_voice not in ["Alice", "Dave", "Ruslan", "Eve"]:
         selected_voice = "Dave"
     
     if has_cyrillic(llm_message):
@@ -104,6 +105,7 @@ def build_piper_command(llm_message: str, cat):
         "Alice": ("en_US-lessac-high", None),
         "Dave": ("en_US-ryan-high", None),
         "Ruslan": ("ru_RU-ruslan-medium", None),
+        "Eve": ("en_GB-vctk-medium", "99"),
     }
 
     # Set default values if selected_voice is not in the mapping
