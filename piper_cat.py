@@ -17,7 +17,11 @@ import shlex
 class VoiceSelect(Enum):
     Alice: str = 'Alice'
     Eve: str = 'Eve'
+    Amy: str = 'Amy'
+    #Stephany: str = 'Stephany'
     Dave: str = 'Dave'
+    #Stephan: str = 'Stephan'
+    Joe: str = 'Joe'
     Ruslan: str = 'Ruslan'
 
 class piperCatSettings(BaseModel):
@@ -94,7 +98,7 @@ def build_piper_command(llm_message: str, cat):
     selected_voice = settings.get("Voice")
 
     # Check if selected_voice is None or not in the specified list
-    if selected_voice not in ["Alice", "Dave", "Ruslan", "Eve"]:
+    if selected_voice not in ["Alice", "Dave", "Ruslan", "Eve", "Amy", "Stephany", "Stephan", "Joe"]:
         selected_voice = "Dave"
     
     if has_cyrillic(llm_message):
@@ -106,6 +110,10 @@ def build_piper_command(llm_message: str, cat):
         "Dave": ("en_US-ryan-high", None),
         "Ruslan": ("ru_RU-ruslan-medium", None),
         "Eve": ("en_GB-vctk-medium", "99"),
+        "Amy": ("en_US-amy-medium", None),
+        "Stephany": ("en_US-hfc_female-medium", None),
+        "Stephan": ("en_US-hfc_male-medium", None),
+        "Joe": ("en_US-joe-medium", None),
     }
 
     # Set default values if selected_voice is not in the mapping
