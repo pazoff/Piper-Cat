@@ -91,7 +91,7 @@ def run_piper_process(command, output_filename, cat):
 def build_piper_command(llm_message: str, cat):
 
     cleaned_text = remove_special_characters(llm_message)
-    piper_cmd = [f"echo {shlex.quote(cleaned_text)} | ", "piper", "--cuda"]
+    piper_cmd = [f"echo {shlex.quote(cleaned_text)} | ", "piper"]
 
     # Load the settings
     settings = cat.mad_hatter.get_plugin().load_settings()
