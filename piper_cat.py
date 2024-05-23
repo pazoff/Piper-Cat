@@ -18,9 +18,10 @@ class VoiceSelect(Enum):
     Alice: str = 'Alice'
     Eve: str = 'Eve'
     Amy: str = 'Amy'
-    #Stephany: str = 'Stephany'
+    Sonya: str = 'Sonya'
+    Stephany: str = 'Stephany'
     Dave: str = 'Dave'
-    #Stephan: str = 'Stephan'
+    Stephan: str = 'Stephan'
     Joe: str = 'Joe'
     Ruslan: str = 'Ruslan'
 
@@ -51,6 +52,28 @@ def remove_special_characters(text):
     
     return clean_text
 
+def check_and_update_voices():
+    file_path = '/app/voices.json'
+    if not os.path.exists(file_path):
+        try:
+            # Run the command
+            result = subprocess.run(
+                ["piper", "--update-voices", "-m", "en_US-ryan-high"],
+                check=True,  # This will raise a CalledProcessError if the command fails
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            # Decode output with error handling
+            stdout = result.stdout.decode('utf-8', errors='replace')
+            stderr = result.stderr.decode('utf-8', errors='replace')
+            #print("Command output:", stdout)
+            print("Voices update completed successfully")
+        except subprocess.CalledProcessError as e:
+            stderr = e.stderr.decode('utf-8', errors='replace')
+            print(f"An error occurred while updating voices: {stderr}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
 def run_gtts_process(text, filename, cat):
     try:
         language = detect(text)
@@ -72,6 +95,8 @@ def run_gtts_process(text, filename, cat):
 
 # Function to run piper process in the background
 def run_piper_process(command, output_filename, cat):
+
+    check_and_update_voices()
     
     command_string = " ".join(command)
     command_string = command_string + output_filename
@@ -98,7 +123,7 @@ def build_piper_command(llm_message: str, cat):
     selected_voice = settings.get("Voice")
 
     # Check if selected_voice is None or not in the specified list
-    if selected_voice not in ["Alice", "Dave", "Ruslan", "Eve", "Amy", "Stephany", "Stephan", "Joe"]:
+    if selected_voice not in ["Alice", "Dave", "Ruslan", "Eve", "Amy", "Stephany", "Stephan", "Joe", "Sonya"]:
         selected_voice = "Dave"
     
     if has_cyrillic(llm_message):
@@ -114,6 +139,7 @@ def build_piper_command(llm_message: str, cat):
         "Stephany": ("en_US-hfc_female-medium", None),
         "Stephan": ("en_US-hfc_male-medium", None),
         "Joe": ("en_US-joe-medium", None),
+        "Sonya": ("en_US-ljspeech-medium", None),
     }
 
     # Set default values if selected_voice is not in the mapping
