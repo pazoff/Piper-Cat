@@ -1,3 +1,4 @@
 piper-tts
 gtts
 langdetect
+onnxruntime-gpu
