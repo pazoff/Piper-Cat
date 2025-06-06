@@ -80,6 +80,7 @@ def has_cyrillic(text):
 def remove_special_characters(text):
     # Define the pattern to match special characters excluding punctuation, single and double quotation marks, and Cyrillic characters
     pattern = r'[^a-zA-Z0-9\s.,!?\'"а-яА-Я]'  # Matches any character that is not alphanumeric, whitespace, or specific punctuation, including Cyrillic characters
+    pattern = r'[^a-zA-Z0-9À-ÖØ-öø-ÿ\s.,!?\'"а-яА-Я]'  # Matches any character that is not alphanumeric, whitespace, or specific punctuation, including Cyrillic characters
     
     # Replace special characters with an empty string
     clean_text = re.sub(pattern, '', text)
