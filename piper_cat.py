@@ -1,5 +1,6 @@
 import os
 from cat.mad_hatter.decorators import hook, plugin
+from cat.log import log
 from pydantic import BaseModel
 from enum import Enum
 import subprocess
@@ -10,6 +11,7 @@ from gtts import gTTS
 from langdetect import detect
 from langdetect.lang_detect_exception import LangDetectException
 import shlex
+import json
 
 # Settings
 
@@ -24,12 +26,44 @@ class VoiceSelect(Enum):
     Stephan: str = 'Stephan'
     Joe: str = 'Joe'
     Ruslan: str = 'Ruslan'
+    Riccardo: str = 'Riccardo'
+    Paola: str = 'Paola'
+
+
+def check_and_update_voices():
+    file_path = '/app/voices.json'
+    if not os.path.exists(file_path):
+        try:
+            # Run the command
+            result = subprocess.run(
+                ["piper", "--update-voices", "-m", "en_US-ryan-high"],
+                check=True,  # This will raise a CalledProcessError if the command fails
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            # Decode output with error handling
+            stdout = result.stdout.decode('utf-8', errors='replace')
+            stderr = result.stderr.decode('utf-8', errors='replace')
+            #print("Command output:", stdout)
+            log.warning("Voices update completed successfully")
+        except subprocess.CalledProcessError as e:
+            stderr = e.stderr.decode('utf-8', errors='replace')
+            log.error(f"An error occurred while updating voices: {stderr}")
+        except Exception as e:
+            log.error(f"An unexpected error occurred: {e}")
+
+def get_voices():
+    check_and_update_voices()
+    with open("/app/voices.json") as F:
+        voices = json.load(F)
+    return { f"{v['name'].capitalize()} ({v['language']['name_native']})" : (v['key'], None) for v in voices.values() }
+
+VoiceSelect = Enum("VoiceSelect", { k:k for k in get_voices() })
 
 class piperCatSettings(BaseModel):
     # Select
-    Voice: VoiceSelect = VoiceSelect.Dave
+    Voice: VoiceSelect = list(VoiceSelect)[0]
     use_gTTS: bool = False
-
 
 # Give your settings schema to the Cat.
 @plugin
@@ -52,27 +86,6 @@ def remove_special_characters(text):
     
     return clean_text
 
-def check_and_update_voices():
-    file_path = '/app/voices.json'
-    if not os.path.exists(file_path):
-        try:
-            # Run the command
-            result = subprocess.run(
-                ["piper", "--update-voices", "-m", "en_US-ryan-high"],
-                check=True,  # This will raise a CalledProcessError if the command fails
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            # Decode output with error handling
-            stdout = result.stdout.decode('utf-8', errors='replace')
-            stderr = result.stderr.decode('utf-8', errors='replace')
-            #print("Command output:", stdout)
-            print("Voices update completed successfully")
-        except subprocess.CalledProcessError as e:
-            stderr = e.stderr.decode('utf-8', errors='replace')
-            print(f"An error occurred while updating voices: {stderr}")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
 
 def run_gtts_process(text, filename, cat):
     try:
@@ -105,10 +118,12 @@ def run_piper_process(command, output_filename, cat):
     try:
         subprocess.run(command_string, shell=True, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Error executing command: {e}")
+        log.error(f"Error during command execution: {e}")
+        log.error(f"Error output: {e.stderr.decode()}")
+        return
 
     # Generate the audio player HTML and send it as a chat message
-    piper_audio_player = "<audio controls autoplay><source src='" + output_filename + "' type='audio/wav'>Your browser does not support the audio tag.</audio>"
+    piper_audio_player = f"<audio controls autoplay><source src='{output_filename}' type='audio/wav'>Your browser does not support the audio tag.</audio><a href='{output_filename}' target='_blank'>Download Audio</a>"
     cat.send_ws_message(content=piper_audio_player, msg_type='chat')
 
 
@@ -123,8 +138,8 @@ def build_piper_command(llm_message: str, cat):
     selected_voice = settings.get("Voice")
 
     # Check if selected_voice is None or not in the specified list
-    if selected_voice not in ["Alice", "Dave", "Ruslan", "Eve", "Amy", "Stephany", "Stephan", "Joe", "Sonya"]:
-        selected_voice = "Dave"
+    #if selected_voice not in ["Alice", "Dave", "Ruslan", "Eve", "Amy", "Stephany", "Stephan", "Joe", "Sonya", "Riccardo", "Valeria", "Paola"]:
+    #    selected_voice = "Paola"
     
     if has_cyrillic(llm_message):
         selected_voice = "Ruslan"
@@ -140,7 +155,10 @@ def build_piper_command(llm_message: str, cat):
         "Stephan": ("en_US-hfc_male-medium", None),
         "Joe": ("en_US-joe-medium", None),
         "Sonya": ("en_US-ljspeech-medium", None),
+        "Riccardo": ("it_IT-riccardo-x_low", None),
+        "Paola": ("it_IT-paola-medium", None),
     }
+    voice_mapping = get_voices()
 
     # Set default values if selected_voice is not in the mapping
     voice_cmd, speaker_cmd = voice_mapping.get(selected_voice, ("en_US-ryan-high", None))
@@ -174,7 +192,7 @@ def before_cat_sends_message(final_output, cat):
     output_filename = os.path.join(folder_path, f"voice_{formatted_datetime}.wav")
 
     # Get the message sent by LLM
-    message = final_output["content"]
+    message = final_output.content
 
     # Load the settings
     settings = cat.mad_hatter.get_plugin().load_settings()
