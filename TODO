@@ -2,3 +2,7 @@
 - spostare i file delle voci in una dir apposta
 - svuotare la cache degli audio dopo x giorni (tmpwatch?)
 - selezionare automaticamente la voce a seconda del detected language
+
+- move voice files to a dedicated dir
+- clear audio cache after x days (tmpwatch?)
+- automatically select voice based on detected language
